@@ -8,4 +8,5 @@ export declare const env: {
     JWT_EXPIRES_IN: string;
     OPENAI_API_KEY: string;
     OPENAI_MODEL: string;
+    OPENAI_VISION_MODEL: string;
 };

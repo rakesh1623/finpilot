@@ -14,6 +14,7 @@ import budgetRoutes from "./modules/budgets/budget.routes.js";
 import analyticsRoutes from "./modules/analytics/analytics.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
 import importRoutes from "./modules/imports/import.routes.js";
+import receiptRoutes from "./modules/receipts/receipt.routes.js";
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use("/api/v1/budgets", budgetRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/ai", aiRoutes);
 app.use("/api/v1/imports", importRoutes);
+app.use("/api/v1/receipts", receiptRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

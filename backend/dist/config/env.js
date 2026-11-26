@@ -11,6 +11,9 @@ const envSchema = z.object({
     JWT_EXPIRES_IN: z.string().default("1d"),
     OPENAI_API_KEY: z.string().min(1),
     OPENAI_MODEL: z.string().default("gpt-4.1-mini"),
+    OPENAI_VISION_MODEL: z.string()
+        .min(1)
+        .default("gpt-4.1-mini"),
 });
 export const env = envSchema.parse(process.env);
 //# sourceMappingURL=env.js.map

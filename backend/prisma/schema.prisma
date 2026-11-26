@@ -39,6 +39,40 @@ enum ImportRowStatus {
   REJECTED
 }
 
+enum ReceiptStatus {
+  REVIEW
+  COMPLETED
+}
+
+
+model ReceiptScan {
+  id                   String        @id @default(uuid())
+  userId               String
+  transactionId        String?       @unique
+
+  filename             String
+  imageHash            String
+  status               ReceiptStatus @default(REVIEW)
+
+  extractedData        Json
+  reviewedData         Json
+
+  fingerprint          String?
+  duplicateDetected    Boolean       @default(false)
+  duplicateTransactionId String?
+
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([userId, imageHash])
+  @@index([userId, status])
+}
+
+
 model User {
   id           String   @id @default(uuid())
   name         String
@@ -52,6 +86,7 @@ model User {
   budgets       Budget[]
   conversations AIConversation[]
   importBatches ImportBatch[]
+  receiptScans ReceiptScan[]
 }
 
 model Category {
@@ -80,6 +115,7 @@ model Transaction {
   merchant        String?
   transactionDate DateTime
   fingerprint     String?
+  receiptScan ReceiptScan?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
