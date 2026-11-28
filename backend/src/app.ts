@@ -15,7 +15,11 @@ import analyticsRoutes from "./modules/analytics/analytics.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
 import importRoutes from "./modules/imports/import.routes.js";
 import receiptRoutes from "./modules/receipts/receipt.routes.js";
+import cookieParser from "cookie-parser";
 
+import {
+    csrfProtection,
+} from "./middleware/csrf.middleware.js";
 const app = express();
 
 app.use(helmet());
@@ -26,6 +30,8 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
+
 
 app.use(
     pinoHttp({
@@ -39,7 +45,7 @@ app.use(
         },
     })
 );
-
+app.use(csrfProtection);
 app.get("/api/v1/health", (req, res) => {
     res.status(200).json({
         success: true,

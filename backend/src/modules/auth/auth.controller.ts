@@ -8,7 +8,10 @@ import {
 } from "./auth.service.js";
 import { loginSchema, registerSchema } from "./auth.validation.js";
 
-
+import {
+    setAuthCookie,
+    clearAuthCookie,
+} from "../../utils/authCookie.js";
 
 export async function register(
     req: Request,
@@ -17,11 +20,11 @@ export async function register(
     const validatedData = registerSchema.parse(req.body);
 
     const result = await registerUser(validatedData);
-
+    setAuthCookie(res, result.token);
     return res.status(201).json({
         success: true,
         message: "Account created successfully",
-        data: result,
+        data: getAuthResponse(req, result),
     });
 }
 
@@ -32,11 +35,11 @@ export async function login(
     const validatedData = loginSchema.parse(req.body);
 
     const result = await loginUser(validatedData);
-
+    setAuthCookie(res, result.token);
     return res.status(200).json({
         success: true,
         message: "Login successful",
-        data: result,
+        data: getAuthResponse(req, result),
     });
 }
 
@@ -56,5 +59,31 @@ export async function getMe(
     return res.status(200).json({
         success: true,
         data: { user },
+    });
+}
+function getAuthResponse(
+    req: Request,
+    result: {
+        user: unknown;
+        token: string;
+    }
+) {
+    const cookieOnly =
+        req.get("x-auth-mode") === "cookie";
+
+    return cookieOnly
+        ? { user: result.user }
+        : result;
+}
+
+export function logout(
+    _req: Request,
+    res: Response
+) {
+    clearAuthCookie(res);
+
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
     });
 }

@@ -1,36 +1,89 @@
 
-import { Request, Response, NextFunction } from "express";
+import type {
+    Request,
+    Response,
+    NextFunction,
+} from "express";
+
 import jwt from "jsonwebtoken";
 
 import { env } from "../config/env.js";
 import { AppError } from "../utils/AppError.js";
 
+import {
+    AUTH_COOKIE_NAME,
+} from "../utils/authCookie.js";
+
 export function authenticate(
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
 ) {
-    const authHeader = req.headers.authorization;
+    const authorization =
+        req.get("authorization");
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return next(new AppError(401, "Authentication token required"));
+    let token: string | undefined;
+
+    // Bearer authentication takes priority.
+    if (authorization !== undefined) {
+        if (
+            !authorization.startsWith("Bearer ")
+        ) {
+            return next(
+                new AppError(
+                    401,
+                    "Invalid authorization header"
+                )
+            );
+        }
+
+        token = authorization.slice(7).trim();
+    } else {
+        const cookieToken =
+            req.cookies?.[AUTH_COOKIE_NAME];
+
+        if (typeof cookieToken === "string") {
+            token = cookieToken;
+        }
     }
 
-    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return next(
+            new AppError(
+                401,
+                "Authentication required"
+            )
+        );
+    }
 
     try {
-        const payload = jwt.verify(token, env.JWT_SECRET);
+        const payload = jwt.verify(
+            token,
+            env.JWT_SECRET,
+            {
+                algorithms: ["HS256"],
+            }
+        );
 
-        if (typeof payload === "string" || !payload.sub) {
-            return next(new AppError(401, "Invalid authentication token"));
+        if (
+            typeof payload === "string" ||
+            typeof payload.sub !== "string" ||
+            !payload.sub
+        ) {
+            throw new Error("Invalid token payload");
         }
 
         req.user = {
             userId: payload.sub,
         };
 
-        return next();
+        next();
     } catch {
-        return next(new AppError(401, "Invalid or expired token"));
+        next(
+            new AppError(
+                401,
+                "Invalid or expired session"
+            )
+        );
     }
 }
